@@ -1,15 +1,19 @@
 package utils
+
 import (
 	"errors"
 	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
+
 type Claims struct {
 	UserID uuid.UUID `json:"user_id"`
 	Email  string    `json:"email"`
 	jwt.RegisteredClaims
 }
+
 func GenerateJWT(userID uuid.UUID, email string, secret string, expiry time.Duration) (string, error) {
 	claims := Claims{
 		UserID: userID,
@@ -22,6 +26,11 @@ func GenerateJWT(userID uuid.UUID, email string, secret string, expiry time.Dura
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
 }
+
+func GenerateToken(userID uuid.UUID, email string, secret string, expiry time.Duration) (string, error) {
+	return GenerateJWT(userID, email, secret, expiry)
+}
+
 func ValidateToken(tokenString string, secret string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

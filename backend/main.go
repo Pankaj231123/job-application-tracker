@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"job-application-tracker/config"
 	"job-application-tracker/database"
+	"job-application-tracker/handlers"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +27,18 @@ func main() {
 			"message": "Job Tracker API is running",
 		})
 	})
+		// Auth routes
+	expiry, _ := time.ParseDuration(cfg.JWTExpiry)
+	authHandler := &handlers.AuthHandler{
+		JWTSecret: cfg.JWTSecret,
+		JWTExpiry: expiry,
+	}
+
+	auth := router.Group("/auth")
+	{
+		auth.POST("/register", authHandler.Register)
+		auth.POST("/login", authHandler.Login)
+	}
 
 	//start server
 	addr := fmt.Sprintf(":%s", cfg.Port)
