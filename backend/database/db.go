@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"gorm.io/gorm"
 	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"job-application-tracker/models"
 
 	"job-application-tracker/config"
 )
+
 var DB *gorm.DB
 
 func Connect(cfg *config.Config) {
@@ -28,4 +30,11 @@ func Connect(cfg *config.Config) {
 
 	DB = db
 	log.Println("Database connected successfully")
+
+	// Auto migrate tables
+	err = db.AutoMigrate(&models.User{}, &models.Job{})
+	if err != nil {
+		log.Fatal("Migration failed:", err)
+	}
+	log.Println("Database migrated successfully")
 }
