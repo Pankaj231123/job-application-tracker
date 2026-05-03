@@ -2,27 +2,58 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"time"
-	
+	"unicode"
+
 	"job-application-tracker/database"
 	"job-application-tracker/models"
 	"job-application-tracker/utils"
-	
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
 type AuthHandler struct {
 	JWTSecret string
 	JWTExpiry time.Duration
 }
+
+func formatFullName(name string) string {
+	parts := strings.Fields(strings.TrimSpace(name))
+	if len(parts) == 0 {
+		return ""
+	}
+
+	for i, part := range parts {
+		lower := strings.ToLower(part)
+		runes := []rune(lower)
+		if len(runes) == 0 {
+			continue
+		}
+
+		runes[0] = unicode.ToUpper(runes[0])
+		parts[i] = string(runes)
+	}
+
+	return strings.Join(parts, " ")
+}
+
 // Register
 func (h *AuthHandler) Register(c *gin.Context) {
 	var input struct {
+		Name     string `json:"name" binding:"required"`
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required,min=6"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	formattedName := formatFullName(input.Name)
+	if formattedName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Name is required"})
 		return
 	}
 	// Check if email already exists
@@ -38,8 +69,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
-		// Create user
+	// Create user
 	user := models.User{
+		Name:     formattedName,
 		EMAIL:    input.Email,
 		PASSWORD: string(hashed),
 	}
@@ -53,10 +85,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		"message": "Account created successfully",
 		"user": gin.H{
 			"id":    user.ID,
+			"name":  user.Name,
 			"email": user.EMAIL,
 		},
 	})
 }
+
 // Login
 func (h *AuthHandler) Login(c *gin.Context) {
 	var input struct {
@@ -94,6 +128,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"token":   token,
 		"user": gin.H{
 			"id":    user.ID,
+			"name":  formatFullName(user.Name),
 			"email": user.EMAIL,
 		},
 	})
