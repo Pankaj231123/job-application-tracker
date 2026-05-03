@@ -18,7 +18,7 @@ Content-Type: application/json
 
 ###########Create Job Post
 POST http://localhost:8080/jobs
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1MzVjNDYtMjAzZi00OTQwLWI5NDMtZWU1NTNhNDRhZjQ5IiwiZW1haWwiOiJwYW5rYWpAZ21haWwuY29tIiwiZXhwIjoxNzc3ODYwODk5LCJpYXQiOjE3Nzc3NzQ0OTl9.UNYdCzlkBPJV_tvNT1a6zq97x3wcqtm-2aekqKPeQpE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1MzVjNDYtMjAzZi00OTQwLWI5NDMtZWU1NTNhNDRhZjQ5IiwiZW1haWwiOiJwYW5rYWpAZ21haWwuY29tIiwiZXhwIjoxNzc3ODYxMzY4LCJpYXQiOjE3Nzc3NzQ5Njh9.A1lJJvQwdm18IV_DJqa0wXoDTlP1shEXV00BU0AMhcs
 Content-Type: application/json
 
 {
@@ -42,3 +42,19 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1M
 ####Get Job dashboard
 GET http://localhost:8080/dashboard
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1MzVjNDYtMjAzZi00OTQwLWI5NDMtZWU1NTNhNDRhZjQ5IiwiZW1haWwiOiJwYW5rYWpAZ21haWwuY29tIiwiZXhwIjoxNzc3ODYxMTIzLCJpYXQiOjE3Nzc3NzQ3MjN9.dMGeuhr8ceE6l4mrf4kcU731bTSCAWcU5hfKp7eWL0M
+
+
+#########
+PUT http://localhost:8080/jobs/a88d6fac-baa4-4489-be00-cc228ac830ca
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1MzVjNDYtMjAzZi00OTQwLWI5NDMtZWU1NTNhNDRhZjQ5IiwiZW1haWwiOiJwYW5rYWpAZ21haWwuY29tIiwiZXhwIjoxNzc3ODYwODk5LCJpYXQiOjE3Nzc3NzQ0OTl9.UNYdCzlkBPJV_tvNT1a6zq97x3wcqtm-2aekqKPeQpE
+Content-Type: application/json
+
+{
+    "status": "interview",
+    "notes": "Interview scheduled for May 10"
+}
+
+
+#########DELETE 
+DELETE http://localhost:8080/jobs/a88d6fac-baa4-4489-be00-cc228ac830ca
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1MzVjNDYtMjAzZi00OTQwLWI5NDMtZWU1NTNhNDRhZjQ5IiwiZW1haWwiOiJwYW5rYWpAZ21haWwuY29tIiwiZXhwIjoxNzc3ODYwODk5LCJpYXQiOjE3Nzc3NzQ0OTl9.UNYdCzlkBPJV_tvNT1a6zq97x3wcqtm-2aekqKPeQpE
