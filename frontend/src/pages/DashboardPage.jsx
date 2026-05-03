@@ -149,99 +149,153 @@ export default function DashboardPage() {
 
   const total = dashboard?.total ?? 0;
   const byStatus = dashboard?.by_status || {};
+  const displayName = displayUserName(user);
+  const activeApplications = (byStatus.applied || 0) + (byStatus.interview || 0) + (byStatus.technical || 0);
+  const closingSoon = (byStatus.offer || 0) + (byStatus.interview || 0);
+  const offerRate = total > 0 ? Math.round(((byStatus.offer || 0) / total) * 100) : 0;
 
   return (
-    <main className="dashboard">
-      <section className="dashboard__header">
-        <div>
+    <main className="dashboard dashboard--home">
+      <section className="dashboard-hero">
+        <div className="dashboard-hero__copy">
           <span className="dashboard__eyebrow">Job Application Tracker</span>
-          <h1>Dashboard</h1>
+          <h1>{displayName ? `Welcome back, ${displayName}` : 'Welcome back'}</h1>
           <p>
-            {displayUserName(user)
-              ? `Signed in as ${displayUserName(user)}`
-              : 'Your current application snapshot is below.'}
+            Your job search is organized, warm, and easy to scan. Keep momentum with one place for saved,
+            applied, interview, and offer stages.
           </p>
+
+          <div className="dashboard-hero__actions">
+            <Link className="dashboard__primary-action" to="/jobs/new">
+              Add new job
+            </Link>
+            <Link className="dashboard__secondary-action" to="/jobs">
+              View all jobs
+            </Link>
+            <button type="button" className="dashboard__secondary-action" onClick={handleCopyToken}>
+              Copy token
+            </button>
+          </div>
         </div>
 
-        <div className="dashboard__actions">
-          <Link className="dashboard__primary-action" to="/jobs/new">
-            Add new job
-          </Link>
-          <Link className="dashboard__secondary-action" to="/jobs">
-            View all jobs
-          </Link>
-          <button type="button" className="dashboard__secondary-action" onClick={handleCopyToken}>
-            Copy token
-          </button>
-          <button type="button" className="dashboard__logout" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
+        <aside className="dashboard-hero__panel">
+          <div className="dashboard-hero__panel-top">
+            <span>Live snapshot</span>
+            <strong>{total}</strong>
+          </div>
+
+          <div className="dashboard-hero__panel-grid">
+            <article>
+              <span>Active</span>
+              <strong>{activeApplications}</strong>
+            </article>
+            <article>
+              <span>Closing soon</span>
+              <strong>{closingSoon}</strong>
+            </article>
+            <article>
+              <span>Offer rate</span>
+              <strong>{offerRate}%</strong>
+            </article>
+            <article>
+              <span>Saved</span>
+              <strong>{byStatus.saved || 0}</strong>
+            </article>
+          </div>
+
+          <div className="dashboard-hero__panel-footer">
+            <p>Use the Jobs List to update status, edit applications, and keep the flow clean.</p>
+            <Link to="/jobs" className="dashboard-hero__panel-link">
+              Open jobs list
+            </Link>
+          </div>
+        </aside>
       </section>
 
-      <section className="dashboard__hero-grid">
-        <article className="dashboard-card dashboard-card--primary">
-          <span className="dashboard-card__label">Total Applications</span>
+      <section className="dashboard-metrics">
+        <article className="metric-card metric-card--accent">
+          <span>Total Applications</span>
           <strong>{total}</strong>
           <p>All saved roles in your workspace.</p>
         </article>
 
-        <article className="dashboard-card">
-          <span className="dashboard-card__label">In Progress</span>
-          <strong>{(byStatus.applied || 0) + (byStatus.interview || 0) + (byStatus.technical || 0)}</strong>
+        <article className="metric-card">
+          <span>In Progress</span>
+          <strong>{activeApplications}</strong>
           <p>Applications waiting on the next step.</p>
         </article>
 
-        <article className="dashboard-card">
-          <span className="dashboard-card__label">Active Pipeline</span>
-          <strong>{(byStatus.offer || 0) + (byStatus.interview || 0)}</strong>
+        <article className="metric-card">
+          <span>Active Pipeline</span>
+          <strong>{closingSoon}</strong>
           <p>Roles closest to a decision.</p>
         </article>
       </section>
 
-      <section className="dashboard__status-section">
+      <section className="dashboard-board">
         <div className="section-head">
-          <h2>Status Breakdown</h2>
-          <span>Current counts by pipeline stage</span>
+          <div>
+            <h2>Status Breakdown</h2>
+            <span>Current counts by pipeline stage</span>
+          </div>
+          <Link className="dashboard__link" to="/jobs">
+            Open the full jobs list
+          </Link>
         </div>
 
-        <div className="status-grid">
-          {statusOrder.map((status) => (
-            <article key={status} className="status-pill">
-              <span>{formatStatus(status)}</span>
-              <strong>{byStatus[status] || 0}</strong>
-            </article>
-          ))}
+        <div className="status-grid status-grid--dashboard">
+          {statusOrder.map((status) => {
+            const count = byStatus[status] || 0;
+            const width = total > 0 ? Math.max(8, Math.round((count / total) * 100)) : 0;
+
+            return (
+              <article key={status} className="status-pill">
+                <div className="status-pill__top">
+                  <span>{formatStatus(status)}</span>
+                  <strong>{count}</strong>
+                </div>
+                <div className="status-pill__track" aria-hidden="true">
+                  <span style={{ width: `${width}%` }} />
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
-      <section className="dashboard__recent-section">
+      <section className="dashboard-board dashboard-board--recent">
         <div className="section-head">
-          <h2>Recent Applications</h2>
-          <span>
-            <Link className="dashboard__link" to="/jobs">
-              Open the full jobs list
-            </Link>
-          </span>
+          <div>
+            <h2>Recent Applications</h2>
+            <span>Latest roles in the tracker</span>
+          </div>
         </div>
 
-        <div className="recent-list">
+        <div className="recent-grid">
           {jobs.length === 0 ? (
             <div className="recent-empty">No job applications yet. Add your first role from the jobs screen.</div>
           ) : (
             jobs.map((job) => (
-              <article className="recent-item" key={job.id}>
-                <div>
-                  <h3>{job.title}</h3>
-                  <p>{job.company}</p>
-                </div>
-
-                <div className="recent-item__meta">
+              <article className="recent-card" key={job.id}>
+                <div className="recent-card__header">
+                  <div>
+                    <p>{job.company}</p>
+                    <h3>{job.title}</h3>
+                  </div>
                   <span className={`status-tag status-tag--${job.status || 'saved'}`}>
                     {formatStatus(job.status || 'saved')}
                   </span>
-                  <small>Applied: {formatDate(job.applied_date || job.appliedDate)}</small>
-                  <small>Deadline: {formatDate(job.deadline)}</small>
+                </div>
+
+                <div className="recent-card__body">
+                  <div>
+                    <span>Applied</span>
+                    <strong>{formatDate(job.applied_date || job.appliedDate)}</strong>
+                  </div>
+                  <div>
+                    <span>Deadline</span>
+                    <strong>{formatDate(job.deadline)}</strong>
+                  </div>
                 </div>
               </article>
             ))
