@@ -49,4 +49,6 @@ func Setup(router *gin.Engine, cfg *config.Config) {
 	protected.PUT("/jobs/:id", jobHandler.UpdateJob)
 	protected.DELETE("/jobs/:id", jobHandler.DeleteJob)
 	protected.GET("/dashboard", jobHandler.Dashboard)
+
+	router.GET("/public/jobs/search", jobHandler.SearchPublicJobs)
 }
