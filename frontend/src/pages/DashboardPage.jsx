@@ -110,6 +110,21 @@ export default function DashboardPage() {
     navigate('/login', { replace: true });
   }
 
+  async function handleCopyToken() {
+    const token = localStorage.getItem('job-tracker-token');
+    if (!token) {
+      window.alert('No login token found. Please sign in again.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(token);
+      window.alert('JWT token copied. Paste it into the LinkedIn Sync extension popup.');
+    } catch {
+      window.alert('Unable to copy the token automatically. Please copy it manually from browser storage.');
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="dashboard dashboard--centered">
@@ -155,6 +170,9 @@ export default function DashboardPage() {
           <Link className="dashboard__secondary-action" to="/jobs">
             View all jobs
           </Link>
+          <button type="button" className="dashboard__secondary-action" onClick={handleCopyToken}>
+            Copy token
+          </button>
           <button type="button" className="dashboard__logout" onClick={handleLogout}>
             Logout
           </button>

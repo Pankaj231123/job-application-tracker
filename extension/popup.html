@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Tracker Sync</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup__header">
+        <span class="popup__eyebrow">Job Application Tracker</span>
+        <h1>LinkedIn Sync</h1>
+        <p>Save LinkedIn jobs straight into your tracker and mark them applied.</p>
+      </header>
+
+      <section class="popup__panel">
+        <label class="popup__field">
+          <span>Backend URL</span>
+          <input id="apiUrl" type="url" placeholder="http://localhost:8080" />
+        </label>
+
+        <label class="popup__field">
+          <span>JWT Token</span>
+          <textarea id="token" rows="4" placeholder="Paste your login token here"></textarea>
+        </label>
+
+        <div class="popup__actions">
+          <button id="saveSettings" type="button" class="button button--ghost">Save</button>
+          <button id="syncCurrent" type="button" class="button">Sync Current Page</button>
+        </div>
+
+        <p class="popup__hint">
+          Open a LinkedIn job page, then click the floating sync button or use the button above.
+        </p>
+
+        <div id="status" class="popup__status" aria-live="polite"></div>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

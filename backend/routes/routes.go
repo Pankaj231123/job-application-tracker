@@ -44,6 +44,7 @@ func Setup(router *gin.Engine, cfg *config.Config) {
 
 	protected.POST("/jobs", jobHandler.CreateJob)
 	protected.GET("/jobs", jobHandler.GetJobs)
+	protected.POST("/jobs/sync", jobHandler.SyncJob)
 	protected.GET("/jobs/:id", jobHandler.GetJob)
 	protected.PUT("/jobs/:id", jobHandler.UpdateJob)
 	protected.DELETE("/jobs/:id", jobHandler.DeleteJob)

@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Job Tracker LinkedIn Sync",
+  "version": "1.0.0",
+  "description": "Sync LinkedIn job applications into the Job Application Tracker.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://www.linkedin.com/*", "http://localhost:8080/*"],
+  "action": {
+    "default_title": "Job Tracker Sync",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

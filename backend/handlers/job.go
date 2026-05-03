@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"job-application-tracker/database"
@@ -10,57 +12,130 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type JobHandler struct{}
+
+type jobInput struct {
+	Company     string `json:"company"`
+	Title       string `json:"title"`
+	URL         string `json:"url"`
+	Location    string `json:"location"`
+	Salary      string `json:"salary"`
+	Status      string `json:"status"`
+	AppliedDate string `json:"applied_date"`
+	Deadline    string `json:"deadline"`
+	Notes       string `json:"notes"`
+}
+
+func (input jobInput) normalizedStatus(defaultStatus string) string {
+	status := strings.TrimSpace(input.Status)
+	if status == "" {
+		return defaultStatus
+	}
+
+	return status
+}
+
+func parseDateOrToday(dateStr string) *time.Time {
+	if strings.TrimSpace(dateStr) != "" {
+		if t, err := parseDate(dateStr); err == nil {
+			return &t
+		}
+	}
+
+	today, err := parseDate(time.Now().Format("2006-01-02"))
+	if err != nil {
+		now := time.Now()
+		return &now
+	}
+
+	return &today
+}
+
+func applyJobPayload(job *models.Job, input jobInput, defaultStatus string, forceAppliedDate bool) {
+	if strings.TrimSpace(input.Company) != "" {
+		job.Company = strings.TrimSpace(input.Company)
+	}
+	if strings.TrimSpace(input.Title) != "" {
+		job.Title = strings.TrimSpace(input.Title)
+	}
+	if strings.TrimSpace(input.URL) != "" {
+		job.URL = strings.TrimSpace(input.URL)
+	}
+	if strings.TrimSpace(input.Location) != "" {
+		job.Location = strings.TrimSpace(input.Location)
+	}
+	if strings.TrimSpace(input.Salary) != "" {
+		job.Salary = strings.TrimSpace(input.Salary)
+	}
+	job.Status = input.normalizedStatus(defaultStatus)
+	if strings.TrimSpace(input.Notes) != "" {
+		job.Notes = strings.TrimSpace(input.Notes)
+	}
+
+	if forceAppliedDate {
+		job.AppliedDate = parseDateOrToday(input.AppliedDate)
+	} else if strings.TrimSpace(input.AppliedDate) != "" {
+		if t, err := parseDate(input.AppliedDate); err == nil {
+			job.AppliedDate = &t
+		}
+	}
+
+	if strings.TrimSpace(input.Deadline) != "" {
+		if t, err := parseDate(input.Deadline); err == nil {
+			job.Deadline = &t
+		}
+	}
+}
+
+func findSyncedJob(userID uuid.UUID, input jobInput) (*models.Job, error) {
+	trimmedURL := strings.TrimSpace(input.URL)
+	if trimmedURL != "" {
+		var job models.Job
+		if err := database.DB.Where("user_id = ? AND url = ?", userID, trimmedURL).First(&job).Error; err == nil {
+			return &job, nil
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+	}
+
+	trimmedCompany := strings.TrimSpace(input.Company)
+	trimmedTitle := strings.TrimSpace(input.Title)
+	if trimmedCompany != "" && trimmedTitle != "" {
+		var job models.Job
+		if err := database.DB.
+			Where("user_id = ? AND LOWER(company) = LOWER(?) AND LOWER(title) = LOWER(?)", userID, trimmedCompany, trimmedTitle).
+			First(&job).Error; err == nil {
+			return &job, nil
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+	}
+
+	return nil, gorm.ErrRecordNotFound
+}
 
 // Add new job
 func (h *JobHandler) CreateJob(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
-	var input struct {
-		Company     string `json:"company" binding:"required"`
-		Title       string `json:"title" binding:"required"`
-		URL         string `json:"url"`
-		Location    string `json:"location"`
-		Salary      string `json:"salary"`
-		Status      string `json:"status"`
-		AppliedDate string `json:"applied_date"`
-		Deadline    string `json:"deadline"`
-		Notes       string `json:"notes"`
-	}
+	var input jobInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if strings.TrimSpace(input.Company) == "" || strings.TrimSpace(input.Title) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Company and title are required"})
+		return
+	}
 
 	job := models.Job{
-		UserID:   userID,
-		Company:  input.Company,
-		Title:    input.Title,
-		URL:      input.URL,
-		Location: input.Location,
-		Salary:   input.Salary,
-		Status:   input.Status,
-		Notes:    input.Notes,
+		UserID: userID,
 	}
-
-	// Parse dates if provided
-	if input.AppliedDate != "" {
-		if t, err := parseDate(input.AppliedDate); err == nil {
-			job.AppliedDate = &t
-		}
-	}
-	if input.Deadline != "" {
-		if t, err := parseDate(input.Deadline); err == nil {
-			job.Deadline = &t
-		}
-	}
-
-	if job.Status == "" {
-		job.Status = "saved"
-	}
+	applyJobPayload(&job, input, "saved", false)
 
 	if err := database.DB.Create(&job).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create job"})
@@ -70,6 +145,71 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Job added successfully",
 		"job":     job,
+	})
+}
+
+// Sync a LinkedIn application into the tracker
+func (h *JobHandler) SyncJob(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	var input jobInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if strings.TrimSpace(input.URL) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Job URL is required for sync"})
+		return
+	}
+
+	job, err := findSyncedJob(userID, input)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sync job"})
+		return
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		newJob := models.Job{UserID: userID}
+		applyJobPayload(&newJob, input, "applied", true)
+
+		if newJob.Company == "" {
+			newJob.Company = "LinkedIn"
+		}
+		if newJob.Title == "" {
+			newJob.Title = "Applied Job"
+		}
+
+		if err := database.DB.Create(&newJob).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sync job"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"message": "Job synced successfully",
+			"job":     newJob,
+			"created": true,
+		})
+		return
+	}
+
+	applyJobPayload(job, input, "applied", true)
+	if job.Company == "" {
+		job.Company = "LinkedIn"
+	}
+	if job.Title == "" {
+		job.Title = "Applied Job"
+	}
+
+	if err := database.DB.Save(job).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sync job"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Job synced successfully",
+		"job":     job,
+		"created": false,
 	})
 }
 

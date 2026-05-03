@@ -20,7 +20,12 @@ func main() {
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{strings.TrimRight(cfg.FrontendURL, "/")},
+		AllowOriginFunc: func(origin string) bool {
+			frontendOrigin := strings.TrimRight(cfg.FrontendURL, "/")
+			return origin == frontendOrigin ||
+				strings.HasPrefix(origin, "chrome-extension://") ||
+				strings.HasPrefix(origin, "moz-extension://")
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
