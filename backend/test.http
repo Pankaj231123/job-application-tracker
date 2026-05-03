@@ -14,3 +14,31 @@ Content-Type: application/json
     "email": "pankaj@gmail.com",
     "password": "123456"
 }
+
+
+###########Create Job Post
+POST http://localhost:8080/jobs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1MzVjNDYtMjAzZi00OTQwLWI5NDMtZWU1NTNhNDRhZjQ5IiwiZW1haWwiOiJwYW5rYWpAZ21haWwuY29tIiwiZXhwIjoxNzc3ODYwODk5LCJpYXQiOjE3Nzc3NzQ0OTl9.UNYdCzlkBPJV_tvNT1a6zq97x3wcqtm-2aekqKPeQpE
+Content-Type: application/json
+
+{
+    "company": "Shopify",
+    "title": "Go Backend Developer",
+    "url": "https://shopify.com/jobs/123",
+    "location": "Remote",
+    "salary": "$80k - $100k",
+    "status": "applied",
+    "applied_date": "2026-05-01",
+    "deadline": "2026-05-15",
+    "notes": "Need 2 years Go experience"
+}
+
+
+############Get All Job Posts
+//Get All Jobs
+GET http://localhost:8080/jobs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1MzVjNDYtMjAzZi00OTQwLWI5NDMtZWU1NTNhNDRhZjQ5IiwiZW1haWwiOiJwYW5rYWpAZ21haWwuY29tIiwiZXhwIjoxNzc3ODYxMDI5LCJpYXQiOjE3Nzc3NzQ2Mjl9.WZ6ieXzEbXFwEdO51MYKPBKDnLe_y1ZzG9Qw1xwlPOc
+
+####Get Job dashboard
+GET http://localhost:8080/dashboard
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTc1MzVjNDYtMjAzZi00OTQwLWI5NDMtZWU1NTNhNDRhZjQ5IiwiZW1haWwiOiJwYW5rYWpAZ21haWwuY29tIiwiZXhwIjoxNzc3ODYxMTIzLCJpYXQiOjE3Nzc3NzQ3MjN9.dMGeuhr8ceE6l4mrf4kcU731bTSCAWcU5hfKp7eWL0M
