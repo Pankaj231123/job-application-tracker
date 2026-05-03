@@ -172,6 +172,9 @@ export default function DashboardPage() {
             <Link className="dashboard__secondary-action" to="/jobs">
               View all jobs
             </Link>
+            <Link className="dashboard__secondary-action" to="/search/jobs">
+              Search web jobs
+            </Link>
             <button type="button" className="dashboard__secondary-action" onClick={handleCopyToken}>
               Copy token
             </button>

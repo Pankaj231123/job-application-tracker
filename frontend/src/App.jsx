@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import EditJobPage from './pages/EditJobPage';
 import JobListPage from './pages/JobListPage';
 import LoginPage from './pages/LoginPage';
+import OnlineJobsPage from './pages/OnlineJobsPage';
 import RegisterPage from './pages/RegisterPage';
 
 export default function App() {
@@ -44,6 +45,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <EditJobPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/search/jobs"
+        element={
+          <ProtectedRoute>
+            <OnlineJobsPage />
           </ProtectedRoute>
         }
       />

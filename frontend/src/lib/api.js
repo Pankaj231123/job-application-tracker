@@ -138,3 +138,15 @@ export async function deleteJob(id) {
 
   return payload;
 }
+
+export async function searchPublicJobs(query) {
+  const response = await fetch(`${API_BASE_URL}/public/jobs/search?query=${encodeURIComponent(query)}`);
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to search online jobs.');
+  }
+
+  return payload;
+}
