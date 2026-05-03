@@ -35,6 +35,15 @@ function normalize(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function openJobUrl(job) {
+  if (!job.url) {
+    window.alert('No application link is saved for this job yet.');
+    return;
+  }
+
+  window.open(job.url, '_blank', 'noopener,noreferrer');
+}
+
 export default function JobListPage() {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
@@ -127,8 +136,8 @@ export default function JobListPage() {
       <section className="dashboard__header">
         <div>
           <span className="dashboard__eyebrow">Job Application Tracker</span>
-          <h1>Jobs List</h1>
-          <p>Search, filter, edit, or delete every job in one place.</p>
+          <h1>Open Jobs</h1>
+          <p>Browse the latest openings on your platform and send applicants to the right destination dynamically.</p>
         </div>
 
         <div className="dashboard__actions">
@@ -179,6 +188,7 @@ export default function JobListPage() {
                 <th>Company</th>
                 <th>Title</th>
                 <th>Location</th>
+                <th>Apply Link</th>
                 <th>Status</th>
                 <th>Applied Date</th>
                 <th>Deadline</th>
@@ -188,7 +198,7 @@ export default function JobListPage() {
             <tbody>
               {filteredJobs.length === 0 ? (
                 <tr>
-                  <td colSpan="7">
+                  <td colSpan="8">
                     <div className="jobs-empty">No jobs match your search and filter settings.</div>
                   </td>
                 </tr>
@@ -198,6 +208,11 @@ export default function JobListPage() {
                     <td>{job.company}</td>
                     <td>{job.title}</td>
                     <td>{job.location || 'Not set'}</td>
+                    <td>
+                      <button type="button" className="jobs-apply-button" onClick={() => openJobUrl(job)}>
+                        Apply now
+                      </button>
+                    </td>
                     <td>
                       <span className={`status-tag status-tag--${job.status || 'saved'}`}>
                         {formatStatus(job.status || 'saved')}

@@ -1031,6 +1031,24 @@ a {
   color: #7f1d1d;
 }
 
+.jobs-apply-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(180, 83, 9, 0.12));
+  color: #115e59;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.jobs-apply-button:hover {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.18), rgba(180, 83, 9, 0.18));
+}
+
 .job-row-actions__button:disabled {
   cursor: not-allowed;
   opacity: 0.7;
