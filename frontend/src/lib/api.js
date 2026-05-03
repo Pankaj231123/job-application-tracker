@@ -68,6 +68,22 @@ export async function getJobs() {
   return payload;
 }
 
+export async function getJob(id) {
+  const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to load job.');
+  }
+
+  return payload;
+}
+
 export async function createJob(job) {
   const response = await fetch(`${API_BASE_URL}/jobs`, {
     method: 'POST',
@@ -82,6 +98,42 @@ export async function createJob(job) {
 
   if (!response.ok) {
     throw new Error(payload.error || 'Failed to create job.');
+  }
+
+  return payload;
+}
+
+export async function updateJob(id, job) {
+  const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(job),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to update job.');
+  }
+
+  return payload;
+}
+
+export async function deleteJob(id) {
+  const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+    method: 'DELETE',
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to delete job.');
   }
 
   return payload;

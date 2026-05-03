@@ -3,6 +3,8 @@ import AuthLayout from './components/AuthLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AddJobPage from './pages/AddJobPage';
 import DashboardPage from './pages/DashboardPage';
+import EditJobPage from './pages/EditJobPage';
+import JobListPage from './pages/JobListPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
@@ -26,6 +28,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AddJobPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs"
+        element={
+          <ProtectedRoute>
+            <JobListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs/:id/edit"
+        element={
+          <ProtectedRoute>
+            <EditJobPage />
           </ProtectedRoute>
         }
       />

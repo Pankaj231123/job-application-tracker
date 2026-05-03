@@ -127,6 +127,9 @@ export default function DashboardPage() {
           <Link className="dashboard__primary-action" to="/jobs/new">
             Add new job
           </Link>
+          <Link className="dashboard__secondary-action" to="/jobs">
+            View all jobs
+          </Link>
           <button type="button" className="dashboard__logout" onClick={handleLogout}>
             Logout
           </button>
@@ -172,7 +175,11 @@ export default function DashboardPage() {
       <section className="dashboard__recent-section">
         <div className="section-head">
           <h2>Recent Applications</h2>
-          <span>Latest jobs from your tracker</span>
+          <span>
+            <Link className="dashboard__link" to="/jobs">
+              Open the full jobs list
+            </Link>
+          </span>
         </div>
 
         <div className="recent-list">
