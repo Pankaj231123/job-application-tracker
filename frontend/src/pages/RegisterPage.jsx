@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
 import { registerUser } from '../lib/api';
 
-const initialErrors = { email: '', password: '' };
+const initialErrors = { name: '', email: '', password: '' };
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [errors, setErrors] = useState(initialErrors);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -24,6 +24,7 @@ export default function RegisterPage() {
   function validate() {
     const nextErrors = { ...initialErrors };
 
+    if (!form.name.trim()) nextErrors.name = 'Name is required.';
     if (!form.email.trim()) nextErrors.email = 'Email is required.';
     if (!form.password) nextErrors.password = 'Password is required.';
     else if (form.password.length < 6)
@@ -42,6 +43,7 @@ export default function RegisterPage() {
 
     try {
       const response = await registerUser({
+        name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
       });
@@ -65,6 +67,16 @@ export default function RegisterPage() {
       success={successMessage}
       isSubmitting={isSubmitting}
       fields={[
+        {
+          name: 'name',
+          label: 'Name',
+          type: 'text',
+          value: form.name,
+          onChange: handleChange,
+          placeholder: 'Your full name',
+          autoComplete: 'name',
+          error: errors.name,
+        },
         {
           name: 'email',
           label: 'Email',

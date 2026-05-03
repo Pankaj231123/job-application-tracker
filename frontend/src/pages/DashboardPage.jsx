@@ -31,6 +31,29 @@ function formatDate(dateValue) {
   }).format(date);
 }
 
+function displayUserName(user) {
+  if (!user) return '';
+
+  function titleCase(value) {
+    return String(value || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  if (user.name && String(user.name).trim()) {
+    return titleCase(user.name);
+  }
+
+  if (user.email && String(user.email).includes('@')) {
+    return titleCase(String(user.email).split('@')[0]);
+  }
+
+  return titleCase(user.email || '');
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
@@ -119,7 +142,9 @@ export default function DashboardPage() {
           <span className="dashboard__eyebrow">Job Application Tracker</span>
           <h1>Dashboard</h1>
           <p>
-            {user?.email ? `Signed in as ${user.email}` : 'Your current application snapshot is below.'}
+            {displayUserName(user)
+              ? `Signed in as ${displayUserName(user)}`
+              : 'Your current application snapshot is below.'}
           </p>
         </div>
 
