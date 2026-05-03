@@ -175,6 +175,9 @@ export default function DashboardPage() {
             <button type="button" className="dashboard__secondary-action" onClick={handleCopyToken}>
               Copy token
             </button>
+            <button type="button" className="dashboard__logout-action" onClick={handleLogout}>
+              Logout
+            </button>
           </div>
         </div>
 
@@ -205,9 +208,14 @@ export default function DashboardPage() {
 
           <div className="dashboard-hero__panel-footer">
             <p>Use the Jobs List to update status, edit applications, and keep the flow clean.</p>
-            <Link to="/jobs" className="dashboard-hero__panel-link">
-              Open jobs list
-            </Link>
+            <div className="dashboard-hero__panel-footer-actions">
+              <Link to="/jobs" className="dashboard-hero__panel-link">
+                Open jobs list
+              </Link>
+              <button type="button" className="dashboard-hero__panel-logout" onClick={handleLogout}>
+                Logout from account
+              </button>
+            </div>
           </div>
         </aside>
       </section>

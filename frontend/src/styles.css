@@ -440,6 +440,26 @@ a {
   font-weight: 700;
 }
 
+.dashboard__logout-action,
+.dashboard-hero__panel-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(127, 29, 29, 0.18);
+  background: rgba(185, 28, 28, 0.08);
+  color: #7f1d1d;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dashboard__logout-action:hover,
+.dashboard-hero__panel-logout:hover {
+  background: rgba(185, 28, 28, 0.12);
+}
+
 .dashboard-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
@@ -557,6 +577,12 @@ a {
   gap: 14px;
   padding-top: 6px;
   border-top: 1px solid rgba(120, 92, 62, 0.12);
+}
+
+.dashboard-hero__panel-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .dashboard-hero__panel-link {
@@ -1084,6 +1110,10 @@ a {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .dashboard-hero__panel-footer-actions {
+    flex-direction: column;
   }
 
   .jobs-toolbar {
