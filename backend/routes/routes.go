@@ -31,6 +31,7 @@ func Setup(router *gin.Engine, cfg *config.Config) {
 	auth := router.Group("/auth")
 	auth.POST("/register", authHandler.Register)
 	auth.POST("/login", authHandler.Login)
+	auth.POST("/logout", authHandler.Logout)
 
 	jobHandler := &handlers.JobHandler{}
 	protected := router.Group("/")
