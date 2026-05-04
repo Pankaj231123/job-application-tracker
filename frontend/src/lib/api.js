@@ -150,3 +150,22 @@ export async function searchPublicJobs(query) {
 
   return payload;
 }
+
+export async function syncJob(job) {
+  const response = await fetch(`${API_BASE_URL}/jobs/sync`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(job),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to sync job.');
+  }
+
+  return payload;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { searchPublicJobs } from '../lib/api';
+import { searchPublicJobs, syncJob } from '../lib/api';
 
 function formatDate(value) {
   if (!value) return 'Not set';
@@ -23,6 +23,16 @@ export default function OnlineJobsPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [searched, setSearched] = useState(false);
   const [mode, setMode] = useState('featured');
+  const [busyJobId, setBusyJobId] = useState('');
+
+  function openJobUrl(job) {
+    if (!job.url) {
+      window.alert('No application link is available for this job yet.');
+      return;
+    }
+
+    window.open(job.url, '_blank', 'noopener,noreferrer');
+  }
 
   useEffect(() => {
     let isActive = true;
@@ -83,6 +93,28 @@ export default function OnlineJobsPage() {
       setJobs([]);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleTrackAndApply(job) {
+    setBusyJobId(job.id);
+    setErrorMessage('');
+
+    try {
+      await syncJob({
+        company: job.company || 'Web job',
+        title: job.title || 'Applied Job',
+        url: job.url || '',
+        location: job.location || '',
+        status: 'saved',
+        notes: `Saved from web search${job.source ? ` via ${job.source}` : ''}`,
+      });
+
+      openJobUrl(job);
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setBusyJobId('');
     }
   }
 
@@ -183,9 +215,17 @@ export default function OnlineJobsPage() {
                 </div>
 
                 <div className="online-job-actions">
-                  <a className="jobs-apply-button" href={job.url} target="_blank" rel="noreferrer">
-                    Apply now
-                  </a>
+                  <button
+                    type="button"
+                    className="jobs-apply-button"
+                    onClick={() => handleTrackAndApply(job)}
+                    disabled={busyJobId === job.id}
+                  >
+                    {busyJobId === job.id ? 'Saving...' : 'Save & open'}
+                  </button>
+                  <button type="button" className="job-row-actions__button" onClick={() => openJobUrl(job)}>
+                    Open posting
+                  </button>
                   <span className="online-job-actions__meta">{job.type || 'Live opening'}</span>
                 </div>
               </article>
