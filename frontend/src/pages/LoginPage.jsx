@@ -44,13 +44,6 @@ export default function LoginPage() {
         password: form.password,
       });
 
-      if (response.token) {
-        localStorage.setItem('job-tracker-token', response.token);
-      }
-      if (response.user) {
-        localStorage.setItem('job-tracker-user', JSON.stringify(response.user));
-      }
-
       setSuccessMessage(response.message || 'Login successful. Redirecting to dashboard...');
       navigate('/dashboard', { replace: true });
     } catch (error) {
