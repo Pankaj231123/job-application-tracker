@@ -57,13 +57,16 @@ export default function OnlineJobsPage() {
           </p>
 
           <form className="online-search" onSubmit={handleSearch}>
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by role, skill, or company"
-            />
-            <button type="submit" className="dashboard__primary-action">
+            <div className="online-search__field">
+              <span>Search term</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by role, skill, or company"
+              />
+            </div>
+            <button type="submit" className="dashboard__primary-action online-search__button">
               Search web jobs
             </button>
           </form>
@@ -137,6 +140,7 @@ export default function OnlineJobsPage() {
                   <a className="jobs-apply-button" href={job.url} target="_blank" rel="noreferrer">
                     Apply now
                   </a>
+                  <span className="online-job-actions__meta">{job.type || 'Live opening'}</span>
                 </div>
               </article>
             ))}
