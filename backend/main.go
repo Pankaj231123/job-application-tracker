@@ -19,6 +19,9 @@ func main() {
 	database.Connect(cfg)
 
 	router := gin.Default()
+	if err := router.SetTrustedProxies([]string{"127.0.0.1", "::1"}); err != nil {
+		log.Printf("failed to set trusted proxies: %v", err)
+	}
 	router.Use(cors.New(cors.Config{
 		AllowOriginFunc: func(origin string) bool {
 			frontendOrigin := strings.TrimRight(cfg.FrontendURL, "/")

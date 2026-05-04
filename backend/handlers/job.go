@@ -30,6 +30,25 @@ type publicJob struct {
 	Source      string `json:"source"`
 }
 
+func formatPublishedAt(value any) string {
+	switch typed := value.(type) {
+	case string:
+		return typed
+	case float64:
+		if typed <= 0 {
+			return ""
+		}
+		return time.Unix(int64(typed), 0).Format("2006-01-02")
+	case json.Number:
+		if unixSeconds, err := typed.Int64(); err == nil {
+			return time.Unix(unixSeconds, 0).Format("2006-01-02")
+		}
+		return typed.String()
+	default:
+		return ""
+	}
+}
+
 type jobInput struct {
 	Company     string `json:"company"`
 	Title       string `json:"title"`
@@ -232,8 +251,8 @@ func (h *JobHandler) SearchPublicJobs(c *gin.Context) {
 
 	client := &http.Client{Timeout: 15 * time.Second}
 	searchable := strings.ToLower(query)
-	publicJobs := make([]publicJob, 0, 30)
-	featuredJobs := make([]publicJob, 0, 30)
+	publicJobs := make([]publicJob, 0, 80)
+	featuredJobs := make([]publicJob, 0, 120)
 
 	for page := 1; page <= 4; page++ {
 		endpoint := fmt.Sprintf("https://www.arbeitnow.com/api/job-board-api?page=%d", page)
@@ -264,7 +283,7 @@ func (h *JobHandler) SearchPublicJobs(c *gin.Context) {
 				Location    string   `json:"location"`
 				Remote      bool     `json:"remote"`
 				JobTypes    []string `json:"job_types"`
-				CreatedAt   string   `json:"created_at"`
+				CreatedAt   any      `json:"created_at"`
 				URL         string   `json:"url"`
 				Tags        []string `json:"tags"`
 			} `json:"data"`
@@ -298,25 +317,17 @@ func (h *JobHandler) SearchPublicJobs(c *gin.Context) {
 				Location:    location,
 				URL:         job.URL,
 				Type:        jobType,
-				PublishedAt: job.CreatedAt,
+				PublishedAt: formatPublishedAt(job.CreatedAt),
 				Source:      "Arbeitnow",
 			}
 
-			if len(featuredJobs) < 40 {
+			if len(featuredJobs) < 120 {
 				featuredJobs = append(featuredJobs, featuredJob)
 			}
 
-			if matchesQuery && len(publicJobs) < 40 {
+			if matchesQuery && len(publicJobs) < 80 {
 				publicJobs = append(publicJobs, featuredJob)
 			}
-
-			if len(featuredJobs) >= 40 && len(publicJobs) >= 40 {
-				break
-			}
-		}
-
-		if len(featuredJobs) >= 40 && len(publicJobs) >= 40 {
-			break
 		}
 	}
 
