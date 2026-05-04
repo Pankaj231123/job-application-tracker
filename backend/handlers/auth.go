@@ -72,8 +72,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	// Create user
 	user := models.User{
 		Name:     formattedName,
-		EMAIL:    input.Email,
-		PASSWORD: string(hashed),
+		Email:    input.Email,
+		Password: string(hashed),
 	}
 
 	if err := database.DB.Create(&user).Error; err != nil {
@@ -86,7 +86,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		"user": gin.H{
 			"id":    user.ID,
 			"name":  user.Name,
-			"email": user.EMAIL,
+			"email": user.Email,
 		},
 	})
 }
@@ -111,13 +111,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Check password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PASSWORD), []byte(input.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
 	// Generate token
-	token, err := utils.GenerateToken(user.ID, user.EMAIL, h.JWTSecret, h.JWTExpiry)
+	token, err := utils.GenerateToken(user.ID, user.Email, h.JWTSecret, h.JWTExpiry)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -139,7 +139,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"user": gin.H{
 			"id":    user.ID,
 			"name":  formatFullName(user.Name),
-			"email": user.EMAIL,
+			"email": user.Email,
 		},
 	})
 }
