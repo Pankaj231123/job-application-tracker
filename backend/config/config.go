@@ -43,12 +43,3 @@ func getEnv(key, fallback string) string {
 	}
 	return fallback
 }
-
-func LoadConfig() Config {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	return Config{Port: port}
-}
