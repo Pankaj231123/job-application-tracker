@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -228,62 +229,103 @@ func (h *JobHandler) SyncJob(c *gin.Context) {
 // Search public jobs from the web
 func (h *JobHandler) SearchPublicJobs(c *gin.Context) {
 	query := strings.TrimSpace(c.Query("query"))
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	searchable := strings.ToLower(query)
+	publicJobs := make([]publicJob, 0, 30)
+	featuredJobs := make([]publicJob, 0, 30)
+
+	for page := 1; page <= 4; page++ {
+		endpoint := fmt.Sprintf("https://www.arbeitnow.com/api/job-board-api?page=%d", page)
+		request, err := http.NewRequest(http.MethodGet, endpoint, nil)
+		if err != nil {
+			continue
+		}
+		request.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+		request.Header.Set("Accept", "application/json,text/plain,*/*")
+
+		response, err := client.Do(request)
+		if err != nil {
+			continue
+		}
+
+		if response.StatusCode != http.StatusOK {
+			io.Copy(io.Discard, response.Body)
+			response.Body.Close()
+			continue
+		}
+
+		var payload struct {
+			Data []struct {
+				Slug        string   `json:"slug"`
+				CompanyName string   `json:"company_name"`
+				Title       string   `json:"title"`
+				Description string   `json:"description"`
+				Location    string   `json:"location"`
+				Remote      bool     `json:"remote"`
+				JobTypes    []string `json:"job_types"`
+				CreatedAt   string   `json:"created_at"`
+				URL         string   `json:"url"`
+				Tags        []string `json:"tags"`
+			} `json:"data"`
+		}
+
+		if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
+			io.Copy(io.Discard, response.Body)
+			response.Body.Close()
+			continue
+		}
+		response.Body.Close()
+
+		for _, job := range payload.Data {
+			haystack := strings.ToLower(strings.Join([]string{job.Title, job.CompanyName, job.Description, job.Location, strings.Join(job.Tags, " ")}, " "))
+			matchesQuery := searchable == "" || strings.Contains(haystack, searchable)
+
+			jobType := strings.Join(job.JobTypes, ", ")
+			if jobType == "" && job.Remote {
+				jobType = "Remote"
+			}
+
+			location := job.Location
+			if location == "" && job.Remote {
+				location = "Remote"
+			}
+
+			featuredJob := publicJob{
+				ID:          fmt.Sprintf("arbeitnow-%s", job.Slug),
+				Title:       job.Title,
+				Company:     job.CompanyName,
+				Location:    location,
+				URL:         job.URL,
+				Type:        jobType,
+				PublishedAt: job.CreatedAt,
+				Source:      "Arbeitnow",
+			}
+
+			if len(featuredJobs) < 40 {
+				featuredJobs = append(featuredJobs, featuredJob)
+			}
+
+			if matchesQuery && len(publicJobs) < 40 {
+				publicJobs = append(publicJobs, featuredJob)
+			}
+
+			if len(featuredJobs) >= 40 && len(publicJobs) >= 40 {
+				break
+			}
+		}
+
+		if len(featuredJobs) >= 40 && len(publicJobs) >= 40 {
+			break
+		}
+	}
+
+	if query != "" && len(publicJobs) == 0 {
+		publicJobs = featuredJobs
+	}
+
 	if query == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Query is required"})
-		return
-	}
-
-	endpoint := fmt.Sprintf("https://remotive.com/api/remote-jobs?search=%s", query)
-	response, err := http.Get(endpoint)
-	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to reach online jobs source"})
-		return
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "Online jobs source returned an error"})
-		return
-	}
-
-	var payload struct {
-		Jobs []struct {
-			ID                    int    `json:"id"`
-			URL                   string `json:"url"`
-			Title                 string `json:"title"`
-			CompanyName           string `json:"company_name"`
-			CandidateLocation     string `json:"candidate_required_location"`
-			JobType               string `json:"job_type"`
-			PublicationDate       string `json:"publication_date"`
-			Salary                string `json:"salary"`
-			Source                string `json:"source"`
-			Category              string `json:"category"`
-			Description           string `json:"description"`
-			CompanyLogoURL        string `json:"company_logo_url"`
-			CompanyLogoThumbnail  string `json:"company_logo_url"`
-			CompanyNameSlug       string `json:"company_name_slug"`
-			CompanyWebsiteURL     string `json:"company_website_url"`
-			CandidateRequiredTime string `json:"candidate_required_time"`
-		} `json:"jobs"`
-	}
-
-	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to parse online jobs"})
-		return
-	}
-
-	publicJobs := make([]publicJob, 0, len(payload.Jobs))
-	for _, job := range payload.Jobs {
-		publicJobs = append(publicJobs, publicJob{
-			ID:          fmt.Sprintf("remotive-%d", job.ID),
-			Title:       job.Title,
-			Company:     job.CompanyName,
-			Location:    job.CandidateLocation,
-			URL:         job.URL,
-			Type:        job.JobType,
-			PublishedAt: job.PublicationDate,
-			Source:      "Remotive",
-		})
+		publicJobs = featuredJobs
 	}
 
 	c.JSON(http.StatusOK, gin.H{

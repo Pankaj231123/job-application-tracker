@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { searchPublicJobs } from '../lib/api';
 
@@ -17,10 +17,40 @@ function formatDate(value) {
 
 export default function OnlineJobsPage() {
   const [query, setQuery] = useState('');
+  const [allJobs, setAllJobs] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [searched, setSearched] = useState(false);
+  const [mode, setMode] = useState('featured');
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadFeaturedJobs() {
+      setIsLoading(true);
+      try {
+        const response = await searchPublicJobs('');
+        if (!isActive) return;
+        setAllJobs(response.jobs || []);
+        setJobs(response.jobs || []);
+        setMode('featured');
+      } catch (error) {
+        if (!isActive) return;
+        setErrorMessage(error.message);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadFeaturedJobs();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   async function handleSearch(event) {
     event.preventDefault();
@@ -36,8 +66,18 @@ export default function OnlineJobsPage() {
     setSearched(true);
 
     try {
-      const response = await searchPublicJobs(trimmed);
-      setJobs(response.jobs || []);
+      const normalizedQuery = trimmed.toLowerCase();
+      const filteredJobs = allJobs.filter((job) => {
+        const haystack = [job.title, job.company, job.location, job.type, job.source]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return haystack.includes(normalizedQuery);
+      });
+
+      setJobs(filteredJobs);
+      setMode(trimmed ? 'search' : 'featured');
     } catch (error) {
       setErrorMessage(error.message);
       setJobs([]);
@@ -105,7 +145,13 @@ export default function OnlineJobsPage() {
         <div className="section-head">
           <div>
             <h2>Web Jobs</h2>
-            <span>{searched ? `${jobs.length} live results` : 'Search to see live openings'}</span>
+              <span>
+                {mode === 'featured'
+                  ? `${jobs.length} featured openings from Arbeitnow`
+                  : searched
+                    ? `${jobs.length} live results`
+                    : 'Search to see live openings'}
+              </span>
           </div>
         </div>
 
