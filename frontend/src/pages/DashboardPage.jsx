@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getDashboard, getJobs } from '../lib/api';
+import { getDashboard, getJobs, getMe, logoutUser } from '../lib/api';
 
 const statusLabels = {
   saved: 'Saved',
@@ -58,34 +58,26 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-
-  const user = useMemo(() => {
-    const storedUser = localStorage.getItem('job-tracker-user');
-    if (!storedUser) return null;
-
-    try {
-      return JSON.parse(storedUser);
-    } catch {
-      return null;
-    }
-  }, []);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadDashboard() {
       try {
-        const [dashboardResponse, jobsResponse] = await Promise.all([
+        const [dashboardResponse, jobsResponse, userResponse] = await Promise.all([
           getDashboard(),
           getJobs(),
+          getMe(),
         ]);
 
         if (!isActive) return;
 
         setDashboard(dashboardResponse);
         setJobs((jobsResponse.jobs || []).slice(0, 5));
+        setUser(userResponse);
       } catch (error) {
         if (!isActive) return;
 
@@ -104,25 +96,17 @@ export default function DashboardPage() {
     };
   }, []);
 
-  function handleLogout() {
-    localStorage.removeItem('job-tracker-token');
-    localStorage.removeItem('job-tracker-user');
+  async function handleLogout() {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     navigate('/login', { replace: true });
   }
 
   async function handleCopyToken() {
-    const token = localStorage.getItem('job-tracker-token');
-    if (!token) {
-      window.alert('No login token found. Please sign in again.');
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(token);
-      window.alert('JWT token copied. Paste it into the LinkedIn Sync extension popup.');
-    } catch {
-      window.alert('Unable to copy the token automatically. Please copy it manually from browser storage.');
-    }
+    window.alert('Token-based authentication is no longer used. The session is managed securely with httpOnly cookies.');
   }
 
   if (isLoading) {
