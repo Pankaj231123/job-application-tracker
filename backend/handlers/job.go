@@ -17,6 +17,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var httpClient = &http.Client{Timeout: 15 * time.Second}
+
 type JobHandler struct{}
 
 type publicJob struct {
@@ -249,7 +251,6 @@ func (h *JobHandler) SyncJob(c *gin.Context) {
 func (h *JobHandler) SearchPublicJobs(c *gin.Context) {
 	query := strings.TrimSpace(c.Query("query"))
 
-	client := &http.Client{Timeout: 15 * time.Second}
 	searchable := strings.ToLower(query)
 	publicJobs := make([]publicJob, 0, 80)
 	featuredJobs := make([]publicJob, 0, 120)
@@ -263,7 +264,7 @@ func (h *JobHandler) SearchPublicJobs(c *gin.Context) {
 		request.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
 		request.Header.Set("Accept", "application/json,text/plain,*/*")
 
-		response, err := client.Do(request)
+		response, err := httpClient.Do(request)
 		if err != nil {
 			continue
 		}
@@ -480,18 +481,31 @@ func (h *JobHandler) DeleteJob(c *gin.Context) {
 func (h *JobHandler) Dashboard(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
-	var total int64
-	database.DB.Model(&models.Job{}).Where("user_id = ?", userID).Count(&total)
+	type statusCount struct {
+		Status string
+		Count  int64
+	}
+
+	var rows []statusCount
+	if err := database.DB.Model(&models.Job{}).
+		Select("status, count(*) as count").
+		Where("user_id = ? AND deleted_at IS NULL", userID).
+		Group("status").
+		Scan(&rows).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch dashboard"})
+		return
+	}
 
 	statuses := []string{"saved", "applied", "interview", "technical", "offer", "rejected", "ghosted"}
-	counts := make(map[string]int64)
+	counts := make(map[string]int64, len(statuses))
+	for _, s := range statuses {
+		counts[s] = 0
+	}
 
-	for _, status := range statuses {
-		var count int64
-		database.DB.Model(&models.Job{}).
-			Where("user_id = ? AND status = ?", userID, status).
-			Count(&count)
-		counts[status] = count
+	var total int64
+	for _, row := range rows {
+		counts[row.Status] = row.Count
+		total += row.Count
 	}
 
 	c.JSON(http.StatusOK, gin.H{
