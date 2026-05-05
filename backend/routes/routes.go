@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"net/http"
 	"time"
 
 	"job-application-tracker/config"
@@ -13,7 +12,7 @@ import (
 
 func Setup(router *gin.Engine, cfg *config.Config) {
 	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(200, gin.H{
 			"message": "Job Tracker API is running",
 		})
 	})
@@ -24,8 +23,9 @@ func Setup(router *gin.Engine, cfg *config.Config) {
 	}
 
 	authHandler := &handlers.AuthHandler{
-		JWTSecret: cfg.JWTSecret,
-		JWTExpiry: expiry,
+		JWTSecret:    cfg.JWTSecret,
+		JWTExpiry:    expiry,
+		CookieDomain: cfg.CookieDomain,
 	}
 
 	auth := router.Group("/auth")
@@ -36,12 +36,7 @@ func Setup(router *gin.Engine, cfg *config.Config) {
 	jobHandler := &handlers.JobHandler{}
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
-	protected.GET("/me", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"user_id": c.MustGet("user_id"),
-			"email":   c.MustGet("email"),
-		})
-	})
+	protected.GET("/me", authHandler.Me)
 
 	protected.POST("/jobs", jobHandler.CreateJob)
 	protected.GET("/jobs", jobHandler.GetJobs)
