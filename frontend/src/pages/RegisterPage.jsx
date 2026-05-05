@@ -31,7 +31,7 @@ export default function RegisterPage() {
       nextErrors.password = 'Password must be at least 6 characters.';
 
     setErrors(nextErrors);
-    return !nextErrors.email && !nextErrors.password;
+    return !nextErrors.name && !nextErrors.email && !nextErrors.password;
   }
 
   async function handleSubmit(event) {

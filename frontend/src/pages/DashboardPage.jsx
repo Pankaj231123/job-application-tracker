@@ -105,10 +105,6 @@ export default function DashboardPage() {
     navigate('/login', { replace: true });
   }
 
-  async function handleCopyToken() {
-    window.alert('Token-based authentication is no longer used. The session is managed securely with httpOnly cookies.');
-  }
-
   if (isLoading) {
     return (
       <div className="dashboard dashboard--centered">
@@ -159,9 +155,6 @@ export default function DashboardPage() {
             <Link className="dashboard__secondary-action" to="/search/jobs">
               Search web jobs
             </Link>
-            <button type="button" className="dashboard__secondary-action" onClick={handleCopyToken}>
-              Copy token
-            </button>
             <button type="button" className="dashboard__logout-action" onClick={handleLogout}>
               Logout
             </button>
