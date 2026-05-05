@@ -14,7 +14,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(userID uuid.UUID, email string, secret string, expiry time.Duration) (string, error) {
+func GenerateToken(userID uuid.UUID, email string, secret string, expiry time.Duration) (string, error) {
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
@@ -25,10 +25,6 @@ func GenerateJWT(userID uuid.UUID, email string, secret string, expiry time.Dura
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
-}
-
-func GenerateToken(userID uuid.UUID, email string, secret string, expiry time.Duration) (string, error) {
-	return GenerateJWT(userID, email, secret, expiry)
 }
 
 func ValidateToken(tokenString string, secret string) (*Claims, error) {

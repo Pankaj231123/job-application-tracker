@@ -11,12 +11,14 @@ import (
 	"job-application-tracker/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthHandler struct {
-	JWTSecret string
-	JWTExpiry time.Duration
+	JWTSecret    string
+	JWTExpiry    time.Duration
+	CookieDomain string
 }
 
 func formatFullName(name string) string {
@@ -129,7 +131,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		token,
 		int(h.JWTExpiry.Seconds()),
 		"/",
-		"",
+		h.CookieDomain,
 		true,
 		true,
 	)
@@ -151,12 +153,29 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		"",
 		-1,
 		"/",
-		"",
+		h.CookieDomain,
 		true,
 		true,
 	)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Logged out successfully",
+	})
+}
+
+// Me returns the authenticated user's profile
+func (h *AuthHandler) Me(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	var user models.User
+	if err := database.DB.First(&user, "id = ?", userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":    user.ID,
+		"name":  user.Name,
+		"email": user.Email,
 	})
 }
