@@ -259,6 +259,33 @@ a {
   font-size: 0.88rem;
 }
 
+.field__password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field__password-wrapper input {
+  padding-right: 48px;
+}
+
+.field__password-toggle {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a18f82;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 160ms ease;
+}
+
+.field__password-toggle:hover {
+  color: #4d3f34;
+}
+
 .auth-message {
   padding: 14px 16px;
   border-radius: 16px;
