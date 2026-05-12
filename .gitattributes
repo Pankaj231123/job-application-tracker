@@ -1,2 +1,1 @@
-frontend/* linguist-vendored
-   *.css linguist-vendored
+frontend/package-lock.json linguist-generated
